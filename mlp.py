@@ -26,7 +26,12 @@ import libxml
 import math
 import matplotlib.pyplot as plt
 import pickle
+from cross_validation import SCV
 
+'''
+
+
+'''
 class Neurons:
 
 	def __init__(self,conections):
@@ -39,6 +44,11 @@ class Neurons:
 		if isinstance(self.weight,slice):
 			return self.__class__(self[x]
 					     for x in xrange(*self.weight.indices.len(self)))	
+
+'''
+
+
+'''
 
 class Layers(Neurons):
 
@@ -55,7 +65,12 @@ class Layers(Neurons):
 	def __getitem__(self, Layer):
 		if isinstance(self.neuron,slice):
 			return self.__class__(self[x]
-					     for x in xrange(*self.neuron.indices.len(self)))	
+					     for x in xrange(*self.neuron.indices.len(self)))
+
+'''
+
+
+'''	
 class MLP(Layers):
 
 	def __init__(self, *args):
@@ -64,10 +79,10 @@ class MLP(Layers):
 			
 			inputs = args[0] #numero de padroes de entrada
 			outputs = args[1] # numero de neuronios na camada de saida
-			hidden = args[2] # vetor que com dimensao do numero de camadas escondidas e os neuronios em cada uma
+			hidden = args[2] # vetor com dimensao do numero de camadas escondidas e os neuronios em cada uma
 		
 			self.layer = np.empty((hidden.size+2), dtype = object)
-		
+			
 			self.layer[0] = Layers(inputs,0)
 			self.layer[1] = Layers(hidden[0],inputs)
 		 
@@ -78,16 +93,18 @@ class MLP(Layers):
 			self.layer[self.layer.size-1] = Layers(outputs,hidden[hidden.size-1])
 
 			self.erro = 0.0
-			self.quadratic_erro = 0.0
-			self.plot_graph = 0
-			self.learningRate = 0.9 # random.random()
+			self.quad_erro_train = 0.0
+			self.quad_erro_validation = 0.0
+			self.on_validation = False
+			self.learningRate =  random.random()
 			self.momentum = random.random()
-			self.learningDescent = 1 # random.random()
+			self.learningDescent =  random.random()
 			self.epochs = 100
 			self.plotar = 0
 			self.max_normalization = 0
 		else:
 			print ('Invalid Arguments ')
+			return 0
 
 	def __getitem__(self, MLP):
 		if isinstance(self.layer,slice):
@@ -95,6 +112,8 @@ class MLP(Layers):
 					     for x in xrange(*self.layer.indices.len(self))
 					     	   for y in xrange(*self.layer.neuron.indices.len(self))
 							 for z in xrange(*self.layer.neuron.weight.indices.len(self)))	
+
+
 
 	def set_learningRate(self,value):
 		self.learningRate = value
@@ -108,25 +127,54 @@ class MLP(Layers):
 	def set_learningDescent(self,value):
 		self.learningDescent = value
 
-	def graph_on(self, value):
-		self.plot_graph = value
-
 	def sigmoidal(self, vj):
 		return 1/(1+np.exp(-vj))
 
 	def devSigmoidal(self,y):
 		return y*(1.0-y)
 
+	'''
+		configure the samples and output set to train the MLP
+		
+	'''
 	def training_set(self,inputs,outputs):	
 			
-		self.samples = inputs
-		self.out = outputs
-		self.a,self.b = self.out.shape
-		self.erro = np.zeros((self.a,self.b))
 		
+		self.samples = inputs
+
+		try: 
+			a,b = outputs.shape
+			self.out = outputs
+		except ValueError:
+			self.out= np.zeros((outputs.shape[0], 1))
+			self.out[:,0] = outputs[:]
+	
 		self.max_normalization = np.zeros((inputs.shape[1]))
+
 		for i in xrange(0, self.max_normalization.shape[0]):
 			self.max_normalization[i] = np.max((inputs[:,i]),axis = 0)
+	'''
+		configure the validation and output set to view mlp generalization capacity
+		
+	'''
+	
+	def validation_set(self, inputs ,outputs):
+
+		try: 
+			a,b = outputs.shape
+			self.validation_out = outputs
+		except ValueError:
+			self.validation_out = np.zeros((outputs.shape[0], 1))
+			self.validation_out[:,0] = outputs[:]
+
+		self.validation = inputs
+		 
+		self.on_validation = True
+	'''
+		this function is only test to verify if the mlp still works fine after update actions
+		
+		this test is available in the book "Data Mining Concepts and Techniques" pages 405, 406.
+	'''	
 		
 	def teste(self):
 
@@ -143,18 +191,30 @@ class MLP(Layers):
 		self.layer[2].neuron[0].weight[0] = -0.3
 		self.layer[2].neuron[0].weight[1] = -0.2
 		self.layer[2].neuron[0].currentBias = 0.1
+
+	'''
+	variable: set_model [ 0 == training; 1 == validation_set (without backward); 2 == prediction mode] 
+
+	forward function receive the set_model, samples and corresponding output, and carry out the first step of mlp
+	'''
 	 
-	def forward(self, set_predict):
+	def forward(self, set_model, _samples, _output = None):
 
-		predict  = np.zeros((int(self.samples.shape[0]),self.layer[self.layer.size-1].n_neurons))	
+		predict  = np.zeros((int(_samples.shape[0]),self.layer[self.layer.size-1].n_neurons))	
 
-		for ii in range(0,self.samples.shape[0]):
+		try:
+			_erro = np.zeros((_output.shape[0],_output.shape[1]))
+
+		except ValueError:
+			_erro = np.zeros((_output.size,1))
+
+		for ii in range(0,_samples.shape[0]):
 			
-			self.layer[0].inputs[:] = self.samples[ii:ii+1]
+			self.layer[0].inputs[:] = _samples[ii:ii+1]
 	
 			for i in range(0,self.layer[1].neuron.size):
 
-				self.wx = self.layer[1].neuron[i].weight[:] * self.samples[ii:ii+1]	
+				self.wx = self.layer[1].neuron[i].weight[:] * _samples[ii:ii+1]	
 				
 				self.layer[1].inputs[i] = self.sigmoidal(np.sum(self.wx[:]) + self.layer[1].neuron[i].currentBias)
 
@@ -170,15 +230,21 @@ class MLP(Layers):
  		
 				predict[ii,i] = self.layer[self.layer.size-1].inputs[i]
 
-				self.erro[ii,i] = self.out[ii,i] - self.layer[self.layer.size-1].inputs[i]
+				_erro[ii,i] = _output[ii,i] - self.layer[self.layer.size-1].inputs[i]
 
-			if(set_predict == 0):
-				self.backward(self.erro[ii])
+			if(set_model == 0):
+				self.backward(_erro[ii])
 
-		if(set_predict == 1):
-			
+		if(set_model == 0 or set_model == 1):
+			return _erro
+
+		if(set_model == 2):
 			return predict
-					
+	'''
+		backward function is call inside forward step the according set_model, if is situation training the weights are update 
+		
+	'''			
+		
 	def backward(self,erro):
 
 			self.layer[self.layer.size-1].gradient[:] = erro[:]*self.devSigmoidal(self.layer[self.layer.size-1].inputs[:])	
@@ -211,21 +277,31 @@ class MLP(Layers):
 					
 					self.layer[i].neuron[j].currentBias += self.learningRate * self.layer[i].gradient[j]
 					self.layer[i].delta[j] = self.learningRate * self.layer[i].gradient[j]
-					
-	def square_error(self,index):
+			
+	'''
+		calc square mean error (MSE)
+	'''		
+	def square_error(self, erro):
 
-		self.a,self.b = self.erro.shape
-		for i in range(0, self.a):
-			for j in range(0, self.b):
-				self.quadratic_erro[index] += math.pow(self.erro[i,j],2)
-		self.quadratic_erro[index] /= (self.a*self.b)
-		
+		quadratic = 0
+		for i in xrange(0, erro.shape[0]):
+			for j in xrange(0, erro.shape[1]):
+				quadratic += math.pow(erro[i,j],2)
+		return quadratic / erro.size
+	'''
+		Normalize the data set
+	'''	
+
 	def normalize(self, inputs):
 		
 		for i  in range(0, inputs.shape[1]):
 			inputs[:,i] /= self.max_normalization[i]
 
 		return inputs
+
+	'''
+		Denormalize the data set
+	'''	
 
 	def denormalization(self, inputs):
 		
@@ -234,23 +310,43 @@ class MLP(Layers):
 
 		return inputs
 
-	def shuffle(self):
+	'''
+		Change the order of samples in data set
+	'''
+	def shuffle(self, _samples, _output):
 
-		self.a1,self.b1 = self.out.shape
-		self.a2,self.b2 = self.samples.shape			
+		try:
+			a1,b1 = _output.shape
+		except ValueError:
+			asd = _output
+			_output = np.zeros((asd.shape[0],1))
+			_output[:,0] = asd[:]
+			a1,b1 = _output.shape
+	
+		a2,b2 = _samples.shape			
 
-		self.dados = np.concatenate((self.samples,self.out),axis = 1)
-		self.dados = np.random.permutation(self.dados)
+		dados = np.concatenate((_samples,_output),axis = 1)
+		dados = np.random.permutation(dados)
 					
-		self.samples = self.dados[:,0:self.b2]
+		_samples = dados[:,0:b2]
 		
-		self.out = self.dados[:,self.b2:self.b2+self.b1]
+		_output = dados[:,b2:b2+b1]
+
+		return self.normalize(_samples), self.normalize(_output)
+	
+	'''
+		Getting started mlp train process 
+	'''
 		
 	def train_mlp(self, inputs, outputs):
 
 		self.training_set(inputs, outputs)
 	
 		self.train()
+
+	'''
+		
+	'''
 
 	def keep_train_mlp(self,inputs,outputs):
 
@@ -268,33 +364,46 @@ class MLP(Layers):
 
 	def train(self):
 
-		self.quadratic_erro = np.zeros((self.epochs), float)
+		self.quad_erro_train = np.zeros((self.epochs), float)
+		self.quad_erro_validation = np.zeros((self.epochs), float)
 
-		self.shuffle()
+		t_in, t_out = self.shuffle(self.samples, self.out)
+				
+		if(self.on_validation):
+			v_in, v_out = self.shuffle(self.validation, self.validation_out)
 
-		self.samples = self.normalize(self.samples)
+		for i in xrange(0, self.epochs):
+
+			self.quad_erro_train[i] = self.square_error(self.forward(0, t_in, t_out))
 	
-		self.out = self.normalize(self.out)
-		
-		for ii in range(0, self.epochs):
+			if(self.on_validation):
+				self.quad_erro_validation[i] = self.square_error(self.forward(1, v_in, v_out))
 
-			self.forward(0)
-
-			self.learningRate *= self.learningDescent
-
-			self.square_error(ii)
 			
+			#self.learningRate *= self.learningDescent
+		
+					
 	def predict(self, inputs):
 
-		self.samples = inputs
-		return self.denormalization(self.forward(1))
+		return self.denormalization(self.forward(inputs,2))
 
 	def plot_learning_curve(self):
 		
 		plt.xlabel('Epochs')
 		plt.ylabel('Quadratic Error')
 		plt.title('Quadratic Error Curve')
-		plt.plot(self.quadratic_erro, 'r-')	
+
+		y = np.arange(0,self.epochs)		
+		
+		p2 = plt.plot(y,self.quad_erro_train)
+			
+		if(self.on_validation):
+			p1 = plt.plot(y,self.quad_erro_validation)
+			plt.legend([p1[0], p2[0]], ['Validation_set','Training_set'])	
+		else:
+			plt.legend([p2[0]],['Training_set'])
+
+			plt.plot(y,self.quad_erro_train)	
 		plt.show()
 
 	def save_mlp(self, mlp, path_and_namefile):
@@ -319,4 +428,24 @@ class MLP(Layers):
 		
 
 #******************************************************************************************************
+'''
+in_geral = np.loadtxt("/home/jeferson/Desktop/uci_data_sets/breast_cancer.txt")
+out_geral = np.loadtxt("/home/jeferson/Desktop/uci_data_sets/breast_cancer_out.txt")
+
+scv = SCV(in_geral, out_geral, 5)
+
+t,tt,v, vv = scv.select_fold_combination(0)
+
+print t.shape, tt.shape, v.shape,vv.shape
+
+hide = np.array([10])
+
+ann = MLP(t.shape[1], t.shape[1], hide)
+
+ann.validation_set(v,v)
+
+ann.train_mlp(t, t)
+
+ann.plot_learning_curve()
+'''
 
