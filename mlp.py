@@ -22,7 +22,7 @@ slice(start, stop, increment)
 """
 import numpy as np
 import random
-import libxml
+#import libxml
 import math
 import matplotlib.pyplot as plt
 import pickle
