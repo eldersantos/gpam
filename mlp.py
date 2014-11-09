@@ -98,7 +98,7 @@ class MLP(Layers):
 			self.on_validation = False
 			self.learningRate =  random.random()
 			self.momentum = random.random()
-			self.learningDescent =  random.random()
+			self.learningDescent =  0.2
 			self.epochs = 100
 			self.plotar = 0
 			self.max_normalization = 0
@@ -115,31 +115,35 @@ class MLP(Layers):
 
 
 
-	def set_learningRate(self,value):
+	def set_learningRate(self, value):
 		self.learningRate = value
 
-	def set_momentum(self,value):
+	def set_momentum(self, value):
 		self.momentum = value
 
-	def set_epochs(self,value):
+	def set_epochs(self, value):
 		self.epochs = value
 
-	def set_learningDescent(self,value):
+	def set_learningDescent(self, value):
 		self.learningDescent = value
 
 	def sigmoidal(self, vj):
-		return 1/(1+np.exp(-vj))
+		return 1 / (1 + np.exp(-vj))
 
-	def devSigmoidal(self,y):
-		return y*(1.0-y)
+	def devSigmoidal(self, y):
+		return y * (1.0 - y)
+
+	def get_validationError (self):
+		return self.quad_erro_validation.min()
+
+	def get_trainingError (self):
+		return self.quad_erro_train.min()
 
 	'''
 		configure the samples and output set to train the MLP
 		
 	'''
 	def training_set(self,inputs,outputs):	
-			
-		
 		self.samples = inputs
 
 		try: 
@@ -159,7 +163,6 @@ class MLP(Layers):
 	'''
 	
 	def validation_set(self, inputs ,outputs):
-
 		try: 
 			a,b = outputs.shape
 			self.validation_out = outputs
@@ -177,7 +180,6 @@ class MLP(Layers):
 	'''	
 		
 	def teste(self):
-
 		self.layer[1].neuron[0].weight[0] = 0.2
 		self.layer[1].neuron[0].weight[1] = 0.4
 		self.layer[1].neuron[0].weight[2] = -0.5
@@ -199,7 +201,6 @@ class MLP(Layers):
 	'''
 	 
 	def forward(self, set_model, _samples, _output = None):
-
 		predict  = np.zeros((int(_samples.shape[0]),self.layer[self.layer.size-1].n_neurons))	
 
 		try:
@@ -209,27 +210,19 @@ class MLP(Layers):
 			_erro = np.zeros((_output.size,1))
 
 		for ii in range(0,_samples.shape[0]):
-			
 			self.layer[0].inputs[:] = _samples[ii:ii+1]
 	
 			for i in range(0,self.layer[1].neuron.size):
-
 				self.wx = self.layer[1].neuron[i].weight[:] * _samples[ii:ii+1]	
-				
 				self.layer[1].inputs[i] = self.sigmoidal(np.sum(self.wx[:]) + self.layer[1].neuron[i].currentBias)
 
 			for i in range(2,self.layer.size):
-
 				for j in range(0,self.layer[i].neuron.size):
-
 					self.wx = self.layer[i].neuron[j].weight[:] * self.layer[i-1].inputs[:] 
-							
 					self.layer[i].inputs[j] = self.sigmoidal(np.sum(self.wx[:]) + self.layer[i].neuron[j].currentBias)
 					
 			for i in range(0, predict.shape[1]):
- 		
 				predict[ii,i] = self.layer[self.layer.size-1].inputs[i]
-
 				_erro[ii,i] = _output[ii,i] - self.layer[self.layer.size-1].inputs[i]
 
 			if(set_model == 0):
@@ -245,44 +238,31 @@ class MLP(Layers):
 		
 	'''			
 		
-	def backward(self,erro):
-
-			self.layer[self.layer.size-1].gradient[:] = erro[:]*self.devSigmoidal(self.layer[self.layer.size-1].inputs[:])	
-						
-			for i in range(self.layer.size-2,0,-1):
-				
-				self.sum = np.zeros((self.layer[i].neuron.size))
-						
-				for j in range(0, self.layer[i].neuron.size):
+	def backward(self, erro):
+		self.layer[self.layer.size-1].gradient[:] = erro[:]*self.devSigmoidal(self.layer[self.layer.size-1].inputs[:])	
 					
-					for k in range(0, self.layer[i+1].neuron.size):
-
-						self.sum[j] += self.layer[i+1].gradient[k]*self.layer[i+1].neuron[k].weight[j]
-						
-					self.layer[i].gradient[j] = self.devSigmoidal(self.layer[i].inputs[j])*self.sum[j]
-								
-			
-			for i in range(self.layer.size-2,-1,-1):
-			
-				for k in range(0, self.layer[i].neuron.size):
-											
-					for j in range(0, self.layer[i+1].neuron.size):
+		for i in range(self.layer.size-2,0,-1):			
+			self.sum = np.zeros((self.layer[i].neuron.size))
 					
-						self.layer[i+1].neuron[j].weight[k] += (self.momentum*self.layer[i+1].delta[j]) + self.learningRate * self.layer[i+1].gradient[j] * self.layer[i].inputs[k]
-						
-						
-			for i in range(self.layer.size-1,0,-1):
-			
-				for j in range(0, self.layer[i].neuron.size):
-					
-					self.layer[i].neuron[j].currentBias += self.learningRate * self.layer[i].gradient[j]
-					self.layer[i].delta[j] = self.learningRate * self.layer[i].gradient[j]
+			for j in range(0, self.layer[i].neuron.size):
+				for k in range(0, self.layer[i+1].neuron.size):
+					self.sum[j] += self.layer[i+1].gradient[k]*self.layer[i+1].neuron[k].weight[j]						
+				self.layer[i].gradient[j] = self.devSigmoidal(self.layer[i].inputs[j])*self.sum[j]
+									
+		for i in range(self.layer.size-2,-1,-1):		
+			for k in range(0, self.layer[i].neuron.size):										
+				for j in range(0, self.layer[i+1].neuron.size):					
+					self.layer[i+1].neuron[j].weight[k] += (self.momentum*self.layer[i+1].delta[j]) + self.learningRate * self.layer[i+1].gradient[j] * self.layer[i].inputs[k]
+										
+		for i in range(self.layer.size-1,0,-1):			
+			for j in range(0, self.layer[i].neuron.size):					
+				self.layer[i].neuron[j].currentBias += self.learningRate * self.layer[i].gradient[j]
+				self.layer[i].delta[j] = self.learningRate * self.layer[i].gradient[j]
 			
 	'''
 		calc square mean error (MSE)
 	'''		
 	def square_error(self, erro):
-
 		quadratic = 0
 		for i in xrange(0, erro.shape[0]):
 			for j in xrange(0, erro.shape[1]):
@@ -292,8 +272,7 @@ class MLP(Layers):
 		Normalize the data set
 	'''	
 
-	def normalize(self, inputs):
-		
+	def normalize(self, inputs):	
 		for i  in range(0, inputs.shape[1]):
 			inputs[:,i] /= self.max_normalization[i]
 
@@ -304,7 +283,6 @@ class MLP(Layers):
 	'''	
 
 	def denormalization(self, inputs):
-		
 		for i  in range(0, inputs.shape[1]):
 			inputs[:,i] *= self.max_normalization[i]
 
@@ -314,7 +292,6 @@ class MLP(Layers):
 		Change the order of samples in data set
 	'''
 	def shuffle(self, _samples, _output):
-
 		try:
 			a1,b1 = _output.shape
 		except ValueError:
@@ -329,7 +306,6 @@ class MLP(Layers):
 		dados = np.random.permutation(dados)
 					
 		_samples = dados[:,0:b2]
-		
 		_output = dados[:,b2:b2+b1]
 
 		return self.normalize(_samples), self.normalize(_output)
@@ -339,9 +315,7 @@ class MLP(Layers):
 	'''
 		
 	def train_mlp(self, inputs, outputs):
-
 		self.training_set(inputs, outputs)
-	
 		self.train()
 
 	'''
@@ -349,43 +323,29 @@ class MLP(Layers):
 	'''
 
 	def keep_train_mlp(self,inputs,outputs):
-
 		self.samples = self.denormalization(self.samples)
-
 		self.samples = np.concatenate(self.samples,inputs)
-	
 		self.out = self.denormalization(self.out)
-
 		self.out = np.concatenate(self.out,outputs)
-		
 		self.training_set(inputs, outputs)
-
 		self.train()
 
 	def train(self):
-
 		self.quad_erro_train = np.zeros((self.epochs), float)
 		self.quad_erro_validation = np.zeros((self.epochs), float)
-
 		t_in, t_out = self.shuffle(self.samples, self.out)
 				
 		if(self.on_validation):
 			v_in, v_out = self.shuffle(self.validation, self.validation_out)
 
 		for i in xrange(0, self.epochs):
-
 			self.quad_erro_train[i] = self.square_error(self.forward(0, t_in, t_out))
-	
 			if(self.on_validation):
 				self.quad_erro_validation[i] = self.square_error(self.forward(1, v_in, v_out))
-
-			
-			#self.learningRate *= self.learningDescent
 		
 					
 	def predict(self, inputs):
-
-		return self.denormalization(self.forward(inputs,2))
+		return self.denormalization(self.forward(inputs, 2))
 
 	def plot_learning_curve(self):
 		
@@ -399,9 +359,9 @@ class MLP(Layers):
 			
 		if(self.on_validation):
 			p1 = plt.plot(y,self.quad_erro_validation)
-			plt.legend([p1[0], p2[0]], ['Validation_set','Training_set'])	
+			plt.legend([p1[0], p2[0]], ['Validation','Training'])	
 		else:
-			plt.legend([p2[0]],['Training_set'])
+			plt.legend([p2[0]],['Training'])
 
 			plt.plot(y,self.quad_erro_train)	
 		plt.show()
@@ -411,7 +371,7 @@ class MLP(Layers):
 		path_and_namefile += ".pk1"
 
 		with open(path_and_namefile, 'wb') as save:
-			pickle.dump(mlp,save,pickle.HIGHEST_PROTOCOL)
+			pickle.dump(mlp, save, pickle.HIGHEST_PROTOCOL)
 		
 	@staticmethod
 	def load_mlp( path_and_namefile):
@@ -425,27 +385,4 @@ class MLP(Layers):
 		except:
 			print ("Open file error, try again")
 
-		
-
-#******************************************************************************************************
-'''
-in_geral = np.loadtxt("/home/jeferson/Desktop/uci_data_sets/breast_cancer.txt")
-out_geral = np.loadtxt("/home/jeferson/Desktop/uci_data_sets/breast_cancer_out.txt")
-
-scv = SCV(in_geral, out_geral, 5)
-
-t,tt,v, vv = scv.select_fold_combination(0)
-
-print t.shape, tt.shape, v.shape,vv.shape
-
-hide = np.array([10])
-
-ann = MLP(t.shape[1], t.shape[1], hide)
-
-ann.validation_set(v,v)
-
-ann.train_mlp(t, t)
-
-ann.plot_learning_curve()
-'''
 
