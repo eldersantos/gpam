@@ -67,19 +67,26 @@ class Layers(Neurons):
 			return self.__class__(self[x]
 					     for x in xrange(*self.neuron.indices.len(self)))
 
-'''
 
-
-'''	
 class MLP(Layers):
+	'''
+	MLP is the main class of the this library, responsible to train the network,
+	get the error and update the weigths.
+	'''	
 
 	def __init__(self, *args):
+		'''
+		:param args: array of integer values
+			args[0] = number of inputs
+			args[1] = number of output neurons
+			args[2] = vector with the number of hidden neurons
+		'''
 		
-		if(len(args)==3):
+		if(len(args) == 3):
 			
-			inputs = args[0] #numero de padroes de entrada
-			outputs = args[1] # numero de neuronios na camada de saida
-			hidden = args[2] # vetor com dimensao do numero de camadas escondidas e os neuronios em cada uma
+			inputs = args[0]
+			outputs = args[1]
+			hidden = args[2]
 		
 			self.layer = np.empty((hidden.size+2), dtype = object)
 			
@@ -92,14 +99,14 @@ class MLP(Layers):
 
 			self.layer[self.layer.size-1] = Layers(outputs,hidden[hidden.size-1])
 
-			self.erro = 0.0
+			self.erro = 0.01
 			self.quad_erro_train = 0.0
 			self.quad_erro_validation = 0.0
 			self.on_validation = False
 			self.learningRate =  random.random()
 			self.momentum = random.random()
 			self.learningDescent =  0.2
-			self.epochs = 100
+			self.epochs = 200
 			self.plotar = 0
 			self.max_normalization = 0
 		else:
@@ -109,9 +116,9 @@ class MLP(Layers):
 	def __getitem__(self, MLP):
 		if isinstance(self.layer,slice):
 			return self.__class__(self[z]
-					     for x in xrange(*self.layer.indices.len(self))
-					     	   for y in xrange(*self.layer.neuron.indices.len(self))
-							 for z in xrange(*self.layer.neuron.weight.indices.len(self)))	
+				for x in xrange(*self.layer.indices.len(self))
+					for y in xrange(*self.layer.neuron.indices.len(self))
+					for z in xrange(*self.layer.neuron.weight.indices.len(self)))	
 
 
 
@@ -127,6 +134,9 @@ class MLP(Layers):
 	def set_learningDescent(self, value):
 		self.learningDescent = value
 
+	def set_erro(self, value):
+		self.erro = value
+
 	def sigmoidal(self, vj):
 		return 1 / (1 + np.exp(-vj))
 
@@ -139,11 +149,11 @@ class MLP(Layers):
 	def get_trainingError (self):
 		return self.quad_erro_train.min()
 
-	'''
-		configure the samples and output set to train the MLP
-		
-	'''
-	def training_set(self,inputs,outputs):	
+	
+	def training_set(self, inputs, outputs):
+		'''
+			configure the samples and output set to train the MLP
+		'''	
 		self.samples = inputs
 
 		try: 
@@ -156,13 +166,13 @@ class MLP(Layers):
 		self.max_normalization = np.zeros((inputs.shape[1]))
 
 		for i in xrange(0, self.max_normalization.shape[0]):
-			self.max_normalization[i] = np.max((inputs[:,i]),axis = 0)
-	'''
-		configure the validation and output set to view mlp generalization capacity
-		
-	'''
+			self.max_normalization[i] = np.max((inputs[:,i]), axis = 0)
+	
 	
 	def validation_set(self, inputs ,outputs):
+		'''
+		configure the validation and output set to view mlp generalization capacity
+		'''
 		try: 
 			a,b = outputs.shape
 			self.validation_out = outputs
@@ -171,15 +181,14 @@ class MLP(Layers):
 			self.validation_out[:,0] = outputs[:]
 
 		self.validation = inputs
-		 
 		self.on_validation = True
-	'''
-		this function is only test to verify if the mlp still works fine after update actions
-		
-		this test is available in the book "Data Mining Concepts and Techniques" pages 405, 406.
-	'''	
+	
 		
 	def teste(self):
+		'''
+		this function is only test to verify if the mlp still works fine after update actions	
+		this test is available in the book "Data Mining Concepts and Techniques" pages 405, 406.
+		'''	
 		self.layer[1].neuron[0].weight[0] = 0.2
 		self.layer[1].neuron[0].weight[1] = 0.4
 		self.layer[1].neuron[0].weight[2] = -0.5
@@ -194,13 +203,12 @@ class MLP(Layers):
 		self.layer[2].neuron[0].weight[1] = -0.2
 		self.layer[2].neuron[0].currentBias = 0.1
 
-	'''
-	variable: set_model [ 0 == training; 1 == validation_set (without backward); 2 == prediction mode] 
-
-	forward function receive the set_model, samples and corresponding output, and carry out the first step of mlp
-	'''
 	 
 	def forward(self, set_model, _samples, _output = None):
+		'''
+		variable: set_model [ 0 == training; 1 == validation_set (without backward); 2 == prediction mode] 
+		forward function receive the set_model, samples and corresponding output, and carry out the first step of mlp
+		'''
 		predict  = np.zeros((int(_samples.shape[0]),self.layer[self.layer.size-1].n_neurons))	
 
 		try:
@@ -233,12 +241,13 @@ class MLP(Layers):
 
 		if(set_model == 2):
 			return predict
-	'''
-		backward function is call inside forward step the according set_model, if is situation training the weights are update 
 		
-	'''			
 		
 	def backward(self, erro):
+		'''
+		backward function is call inside forward step the according set_model.
+		obs: if is situation training the weights are update 
+		'''	
 		self.layer[self.layer.size-1].gradient[:] = erro[:]*self.devSigmoidal(self.layer[self.layer.size-1].inputs[:])	
 					
 		for i in range(self.layer.size-2,0,-1):			
@@ -259,30 +268,32 @@ class MLP(Layers):
 				self.layer[i].neuron[j].currentBias += self.learningRate * self.layer[i].gradient[j]
 				self.layer[i].delta[j] = self.learningRate * self.layer[i].gradient[j]
 			
-	'''
-		calc square mean error (MSE)
-	'''		
+
 	def square_error(self, erro):
+		'''
+		Calculate the square mean error (MSE)
+		'''		
 		quadratic = 0
 		for i in xrange(0, erro.shape[0]):
 			for j in xrange(0, erro.shape[1]):
 				quadratic += math.pow(erro[i,j],2)
 		return quadratic / erro.size
-	'''
-		Normalize the data set
-	'''	
+	
 
-	def normalize(self, inputs):	
+	def normalize(self, inputs):
+		'''
+		Normalize the data set
+		'''	
 		for i  in range(0, inputs.shape[1]):
 			inputs[:,i] /= self.max_normalization[i]
 
 		return inputs
 
-	'''
-		Denormalize the data set
-	'''	
 
-	def denormalization(self, inputs):
+	def denormalization(self, inputs):		
+		'''
+			Denormalize the data set
+		'''	
 		for i  in range(0, inputs.shape[1]):
 			inputs[:,i] *= self.max_normalization[i]
 
@@ -302,25 +313,22 @@ class MLP(Layers):
 	
 		a2,b2 = _samples.shape			
 
-		dados = np.concatenate((_samples,_output),axis = 1)
+		dados = np.concatenate((_samples,_output), axis = 1)
 		dados = np.random.permutation(dados)
 					
 		_samples = dados[:,0:b2]
-		_output = dados[:,b2:b2+b1]
+		_output = dados[:,b2:b2 + b1]
 
 		return self.normalize(_samples), self.normalize(_output)
 	
-	'''
-		Getting started mlp train process 
-	'''
+	
 		
 	def train_mlp(self, inputs, outputs):
+		'''
+		Getting started mlp train process 
+		'''
 		self.training_set(inputs, outputs)
 		self.train()
-
-	'''
-		
-	'''
 
 	def keep_train_mlp(self,inputs,outputs):
 		self.samples = self.denormalization(self.samples)
@@ -342,6 +350,8 @@ class MLP(Layers):
 			self.quad_erro_train[i] = self.square_error(self.forward(0, t_in, t_out))
 			if(self.on_validation):
 				self.quad_erro_validation[i] = self.square_error(self.forward(1, v_in, v_out))
+				if (self.quad_erro_validation[i] <= self.erro):
+					return
 		
 					
 	def predict(self, inputs):
@@ -375,8 +385,6 @@ class MLP(Layers):
 		
 	@staticmethod
 	def load_mlp( path_and_namefile):
-
-		#path_and_namefile += ".pk1"
 		try:
 			with open(path_and_namefile, 'rb') as input:
 				mlp = pickle.load(input)
