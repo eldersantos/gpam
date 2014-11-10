@@ -2,7 +2,7 @@ import numpy as np
 from mlp import MLP
 from cross_validation import SCV
 
-in_geral = np.loadtxt("./datasets/wine.data")
+in_geral = np.loadtxt("./datasets/glass.data")
 
 scv = SCV(in_geral, 2)
 t,tt,v, vv = scv.select_fold_combination()
@@ -10,7 +10,8 @@ t,tt,v, vv = scv.select_fold_combination()
 print(t.shape, tt.shape, v.shape, vv.shape)
 hide = np.array([5])
 ann = MLP(t.shape[1], t.shape[1], hide)
-ann.set_erro(0.02)
+ann.set_erro(0.01)
+ann.set_epochs(1000)
 ann.validation_set(v,v)
 ann.train_mlp(t, t)
 

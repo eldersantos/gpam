@@ -106,7 +106,7 @@ class MLP(Layers):
 			self.learningRate =  random.random()
 			self.momentum = random.random()
 			self.learningDescent =  0.2
-			self.epochs = 200
+			self.epochs = 100
 			self.plotar = 0
 			self.max_normalization = 0
 		else:
@@ -144,10 +144,16 @@ class MLP(Layers):
 		return y * (1.0 - y)
 
 	def get_validationError (self):
-		return self.quad_erro_validation.min()
+		if (self.erro > 0.0):
+			return self.quad_erro_validation[self.quad_erro_validation > 0.0].min()
+		else:
+			return self.quad_erro_validation.min() 
 
 	def get_trainingError (self):
-		return self.quad_erro_train.min()
+		if (self.erro > 0.0):
+			return self.quad_erro_train[self.quad_erro_train > 0.0].min()
+		else:
+			return self.quad_erro_train.min() 
 
 	
 	def training_set(self, inputs, outputs):
@@ -379,7 +385,6 @@ class MLP(Layers):
 	def save_mlp(self, mlp, path_and_namefile):
 		
 		path_and_namefile += ".pk1"
-
 		with open(path_and_namefile, 'wb') as save:
 			pickle.dump(mlp, save, pickle.HIGHEST_PROTOCOL)
 		
