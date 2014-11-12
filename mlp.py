@@ -22,7 +22,6 @@ slice(start, stop, increment)
 """
 import numpy as np
 import random
-#import libxml
 import math
 import matplotlib.pyplot as plt
 import pickle
@@ -363,11 +362,11 @@ class MLP(Layers):
 	def predict(self, inputs):
 		return self.denormalization(self.forward(inputs, 2))
 
-	def plot_learning_curve(self):
+	def plot_learning_curve(self, title):
 		
 		plt.xlabel('Epochs')
 		plt.ylabel('Quadratic Error')
-		plt.title('Quadratic Error Curve')
+		plt.title(title)
 
 		y = np.arange(0,self.epochs)		
 		
@@ -381,6 +380,28 @@ class MLP(Layers):
 
 			plt.plot(y,self.quad_erro_train)	
 		plt.show()
+
+	def plot_neurons(self, title):
+
+		'''
+		plt.xlabel('Attributes')
+		plt.ylabel('Weigths')
+		plt.title(title)
+
+		y = np.arange(0, self.layer[0].inputs)		
+		p2 = plt.plot(y, self.layer[1].neurons)
+		plt.legend([p2[0]],['Weigths'])
+		plt.show()
+		
+		'''
+
+		newlist = []
+		for n in self.layer[1].neuron:
+    			newlist.append(n.weight)
+
+
+		print(self.layer[0].inputs.shape[0])
+		print(newlist)
 
 	def save_mlp(self, mlp, path_and_namefile):
 		
