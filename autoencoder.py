@@ -19,9 +19,15 @@ def run_mlp(dataset_path, neurons):
 	dataset_output = dataset_input[:, - 1]
 	input = dataset_input[:,:-1]
 	print(input)
+	print(dataset_output)
 	scv = SCV(dataset_input, 2)
 	training, training_out, validation, validation_out = scv.select_fold_combination()
+	print(training)
+	print(training_out)
+	print(validation)
+	print(validation_out)
 	hide = np.array([int(neurons)])
+	print(training.shape[1])
 	ann = MLP(training.shape[1],training.shape[1], hide)
 	ann.set_learningRate(0.95)
 	ann.set_learningDescent(0.5)
