@@ -393,7 +393,7 @@ class MLP(Layers):
 		plt.legend([p2[0]],['Weigths'])
 		plt.show()
 		
-		'''
+		
 
 		newlist = []
 		for n in self.layer[1].neuron:
@@ -402,6 +402,7 @@ class MLP(Layers):
 
 		print(self.layer[0].inputs.shape[0])
 		print(newlist)
+		'''
 
 	def save_mlp(self, mlp, path_and_namefile):
 		
