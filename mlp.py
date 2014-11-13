@@ -27,7 +27,6 @@ import matplotlib.pyplot as plt
 import pickle
 from cross_validation import SCV
 import jsonpickle
-import StringIO
 
 '''
 
@@ -155,6 +154,9 @@ class MLP(Layers):
 			return self.quad_erro_train[self.quad_erro_train > 0.0].min()
 		else:
 			return self.quad_erro_train.min() 
+
+	def get_Layers(self):
+		return self.layer
 
 	
 	def training_set(self, inputs, outputs):
@@ -415,18 +417,21 @@ class MLP(Layers):
  			for j in xrange(0, self.layer[0].n_neurons):
    				print ("Neuronio",i, "Atributo ", j, "Valor", self.layer[1].neuron[i].weight[j])
 
-	def save_mlp(self, mlp, path_and_namefile):
-		
+	def save_mlp(self, mlp, path_and_namefile):	
 		path_and_namefile += ".pk1"
 		with open(path_and_namefile, 'wb') as save:
 			pickle.dump(mlp, save, pickle.HIGHEST_PROTOCOL)
 
 	def save_json_mlp(self, mlp, path_and_namefile):
 		path_and_namefile += ".json"
-		frozen = jsonpickle.encode(mlp)
-		f = open(path_and_namefile, 'wt', encoding='utf-8')
-	 	f.write(frozen)
-		f.close()
+
+		neuron = Neurons(1)
+
+		frozen = jsonpickle.encode(neuron, unpicklable = False)
+		print(frozen)
+		#f = open(path_and_namefile, 'wt')
+	 	#f.write(frozen)
+		#f.close()
 		
 	@staticmethod
 	def load_mlp( path_and_namefile):

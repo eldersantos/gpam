@@ -9,6 +9,7 @@ import numpy as np
 from mlp import MLP
 from cross_validation import SCV
 
+
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
@@ -20,7 +21,7 @@ def run_mlp(dataset_path, neurons):
 	input = dataset_input[:,:-1]
 	print(input)
 	print(dataset_output)
-	scv = SCV(dataset_input, 2)
+	scv = SCV(dataset_input, 5)
 	training, training_out, validation, validation_out = scv.select_fold_combination()
 	print("training ", training)
 	print("training out ",training_out)
