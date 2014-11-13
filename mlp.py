@@ -92,7 +92,7 @@ class MLP(Layers):
 			self.layer = np.empty((hidden.size+2), dtype = object)
 			
 			self.layer[0] = Layers(inputs,0)
-			self.layer[1] = Layers(hidden[0],inputs)
+			self.layer[1] = Layers(hidden[0], inputs)
 		 
 			if hidden.size > 1:
 				for i in range(2,self.layer.size-1):		
@@ -396,11 +396,24 @@ class MLP(Layers):
 		plt.legend([p2[0]],['Weigths'])
 		plt.show()
 		
+		
+		newlist = []
+		for n in self.layer[1].neuron:
+    			newlist.append(n.weight)
+
+
+		print(self.layer[0].inputs.shape[0])
+		print(newlist)
+
+
 		'''
+
+		print(self.layer[1].inputs)
+		print(self.layer[1].inputs)
 
 		for i in xrange(0, self.layer[1].n_neurons):
  			for j in xrange(0, self.layer[0].n_neurons):
-   				print ("Neuronio",i, "Peso ", j, "Valor", self.layer[1].neuron[i].weight[j])
+   				print ("Neuronio",i, "Atributo ", j, "Valor", self.layer[1].neuron[i].weight[j])
 
 	def save_mlp(self, mlp, path_and_namefile):
 		
