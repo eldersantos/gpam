@@ -26,6 +26,8 @@ import math
 import matplotlib.pyplot as plt
 import pickle
 from cross_validation import SCV
+import jsonpickle
+import StringIO
 
 '''
 
@@ -405,6 +407,13 @@ class MLP(Layers):
 		path_and_namefile += ".pk1"
 		with open(path_and_namefile, 'wb') as save:
 			pickle.dump(mlp, save, pickle.HIGHEST_PROTOCOL)
+
+	def save_json_mlp(self, mlp, path_and_namefile):
+		path_and_namefile += ".json"
+		frozen = jsonpickle.encode(mlp)
+		f = open(path_and_namefile, 'wt', encoding='utf-8')
+	 	f.write(frozen)
+		f.close()
 		
 	@staticmethod
 	def load_mlp( path_and_namefile):
