@@ -102,9 +102,9 @@ class MLP(Layers):
 			self.quad_erro_train = 0.0
 			self.quad_erro_validation = 0.0
 			self.on_validation = False
-			self.learningRate =  random.random()
+			self.learningRate = random.random()
 			self.momentum = random.random()
-			self.learningDescent =  0.2
+			self.learningDescent = random.random()
 			self.epochs = 100
 			self.plotar = 0
 			self.max_normalization = 0
@@ -355,6 +355,7 @@ class MLP(Layers):
 			self.quad_erro_train[i] = self.square_error(self.forward(0, t_in, t_out))
 			if(self.on_validation):
 				self.quad_erro_validation[i] = self.square_error(self.forward(1, v_in, v_out))
+				self.learningRate = self.learningDescent * (1 - self.learningDescent)
 				if (self.quad_erro_validation[i] <= self.erro):
 					return
 		
@@ -394,7 +395,6 @@ class MLP(Layers):
 		plt.show()
 		
 		
-
 		newlist = []
 		for n in self.layer[1].neuron:
     			newlist.append(n.weight)
@@ -403,6 +403,10 @@ class MLP(Layers):
 		print(self.layer[0].inputs.shape[0])
 		print(newlist)
 		'''
+
+		for i in xrange(0, self.layer[1].n_neurons):
+ 			for j in xrange(0, self.layer[0].n_neurons):
+   				print ("Neuronio",i, "Peso ", j, "Valor", self.layer[1].neuron[i].weight[j])
 
 	def save_mlp(self, mlp, path_and_namefile):
 		
