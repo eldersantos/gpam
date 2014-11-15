@@ -98,13 +98,13 @@ class MLP(Layers):
 
 			self.layer[self.layer.size-1] = Layers(outputs,hidden[hidden.size-1])
 
-			self.erro = 0.01
+			self.erro = 0.001
 			self.quad_erro_train = 0.0
 			self.quad_erro_validation = 0.0
 			self.on_validation = False
-			self.learningRate = random.random()
-			self.momentum = random.random()
-			self.learningDescent = random.random()
+			self.learningRate = 0.95
+			self.momentum = 0.02
+			self.learningDescent = 0.5
 			self.epochs = 100
 			self.plotar = 0
 			self.max_normalization = 0
