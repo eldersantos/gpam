@@ -40,9 +40,8 @@ def run_mlp(dataset_path, neurons):
 	print("Validation Error: ", ann.get_validationError())
 	print("Training Error: ", ann.get_trainingError())
 	title = str(neurons) + " Neurons"
-	ann.save_json_mlp(ann, "./jsonmlp")
 	#ann.plot_learning_curve(title)
-	#ann.plot_neurons(title)
+	ann.plot_neurons(title)
 
 
 def main(argv=None):

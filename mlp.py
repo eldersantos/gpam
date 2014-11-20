@@ -26,7 +26,6 @@ import math
 import matplotlib.pyplot as plt
 import pickle
 from cross_validation import SCV
-import jsonpickle
 
 '''
 
@@ -98,6 +97,9 @@ class MLP(Layers):
 					self.layer[i] = Layers(hidden[i-1],hidden[i-2])
 
 			self.layer[self.layer.size-1] = Layers(outputs,hidden[hidden.size-1])
+			print "self.layer[{}] = {}".format(0, self.layer[0].neuron)
+			print "self.layer[{}] = {}".format(1, self.layer[1].neuron)
+			print "self.layer[{}] = {}".format(2, self.layer[2].neuron) 
 
 			self.erro = 0.001
 			self.quad_erro_train = 0.0
@@ -410,29 +412,19 @@ class MLP(Layers):
 
 		'''
 
+		print(self.layer[0].inputs)
 		print(self.layer[1].inputs)
-		print(self.layer[1].inputs)
+		print(self.layer[2].inputs)
 
 		for i in xrange(0, self.layer[1].n_neurons):
- 			for j in xrange(0, self.layer[0].n_neurons):
-   				print ("Neuronio",i, "Atributo ", j, "Valor", self.layer[1].neuron[i].weight[j])
-
+			for z in xrange(0, self.layer[0].n_neurons):
+   				print "Neuronio{} Atributo {} Valor {}".format(i, z, self.layer[1].neuron[i].weight[z])
+   		
 	def save_mlp(self, mlp, path_and_namefile):	
 		path_and_namefile += ".pk1"
 		with open(path_and_namefile, 'wb') as save:
 			pickle.dump(mlp, save, pickle.HIGHEST_PROTOCOL)
-
-	def save_json_mlp(self, mlp, path_and_namefile):
-		path_and_namefile += ".json"
-
-		neuron = Neurons(1)
-
-		frozen = jsonpickle.encode(neuron, unpicklable = False)
-		print(frozen)
-		#f = open(path_and_namefile, 'wt')
-	 	#f.write(frozen)
-		#f.close()
-		
+	
 	@staticmethod
 	def load_mlp( path_and_namefile):
 		try:
