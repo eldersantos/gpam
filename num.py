@@ -21,7 +21,7 @@ y = np.zeros(N)
 x1 = np.linspace(0, 100, N)
 x2 = np.linspace(0, 100, N, endpoint=False)
 x3 = np.logspace(0.0, 2.0)
-print x1
+print 'x1', x1
 print x2
 print x3
 #plt.plot(x1, y, 'o')
